@@ -30,7 +30,7 @@ def actualizar_versao():
     version_remota = obtener_version_remota()
 
     if version_local != version_remota:
-        print(f"Actualizando de la vesión {version_local} a la {version_remota}")
+        print(f"Actualizando de la versión {version_local} a la {version_remota}")
         try:
             # Hacer pull para traer los cambios
             subprocess.check_output(["git", "pull", "origin", "main"])
@@ -41,7 +41,6 @@ def actualizar_versao():
     else:
         print(f"Ya está en la versión más reciente: {version_local}")
 
-# Verificación de la versión antes de iniciar el servidor
 actualizar_versao()
 
 @app.route('/')
