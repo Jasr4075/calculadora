@@ -1,44 +1,62 @@
-from flask import Flask, request, jsonify
 import os
-import sys
+import subprocess
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# Ruta para la calculadora
+# Función para obtener la versión local
+def obtener_version_local():
+    try:
+        # Obtener el último tag local
+        version_local = subprocess.check_output(["git", "describe", "--tags"]).strip().decode()
+        return version_local
+    except subprocess.CalledProcessError:
+        return "No version"
+
+# Función para obtener la última versión remota
+def obtener_version_remota():
+    try:
+        # Actualiza la información remota
+        subprocess.check_output(["git", "fetch", "--tags"])
+        # Obtiene el último tag remoto
+        version_remota = subprocess.check_output(["git", "describe", "--tags", "origin/main"]).strip().decode()
+        return version_remota
+    except subprocess.CalledProcessError:
+        return "No version"
+
+# Función para actualizar el repositorio si la versión está desactualizada
+def actualizar_versao():
+    version_local = obtener_version_local()
+    version_remota = obtener_version_remota()
+
+    if version_local != version_remota:
+        print(f"Actualizando de la vesión {version_local} a la {version_remota}")
+        try:
+            # Hacer pull para traer los cambios
+            subprocess.check_output(["git", "pull", "origin", "main"])
+            # Reiniciar la aplicación si es necesario
+            os.execl(sys.executable, sys.executable, *sys.argv)
+        except subprocess.CalledProcessError as e:
+            print(f"Error al actualizar: {e}")
+    else:
+        print(f"Ya está en la versión más reciente: {version_local}")
+
+# Verificación de la versión antes de iniciar el servidor
+actualizar_versao()
+
 @app.route('/')
 def index():
     return open("src/index.html").read()
 
-# Ruta para realizar los cálculos
 @app.route('/calculate', methods=['POST'])
 def calculate():
     data = request.get_json()
     expression = data.get('expression', '')
     try:
-        # Evaluar la expresión de forma segura
         result = eval(expression)
     except:
         result = 'Error'
     return jsonify({'result': result})
 
-# Función para verificar la versión y actualizar
-def verificar_versao_atual():
-    url_versao = "http://seu-servidor.com/versao"  # URL de la versión actual
-    versao_atual = "1.0"  # Versión local actual del app
-    try:
-        resposta = requests.get(url_versao)
-        if resposta.status_code == 200:
-            versao_remota = resposta.text.strip()
-            if versao_remota != versao_atual:
-                baixar_e_atualizar(versao_remota)
-    except Exception as e:
-        print("Error al verificar la version:", e)
-
-# Función para bajar y actualizar el archivo (a completar según sea necesario)
-def baixar_e_atualizar(nova_versao):
-    print(f"Atualizando para a versao {nova_versao}")
-    # Lógica de descarga y actualización
-
 if __name__ == '__main__':
-    verificar_versao_atual()  # Verificar si hay una versión nueva antes de iniciar el servidor
-    app.run(debug=True, port=8080)  # Inicia el servidor en el puerto 8080
+    app.run(debug=True, port=8080)
