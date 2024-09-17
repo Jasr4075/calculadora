@@ -32,7 +32,7 @@ def verificar_versao_atual():
             if versao_remota != versao_atual:
                 baixar_e_atualizar(versao_remota)
     except Exception as e:
-        print("Error al verificar la versión:", e)
+        print("Error al verificar la version:", e)
 
 # Función para bajar y actualizar el archivo (a completar según sea necesario)
 def baixar_e_atualizar(nova_versao):
